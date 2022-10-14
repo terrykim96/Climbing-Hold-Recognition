@@ -1,4 +1,4 @@
-#%%
+
 import os
 import sys
 import cv2
@@ -10,7 +10,6 @@ from os import listdir
 from os.path import isfile, join
 
 
-#%%
 def change_hsv(cv_image, hue_rotation):
 
     image = cv_image.copy()
@@ -26,9 +25,8 @@ def change_hsv(cv_image, hue_rotation):
             hsv_image[x, y] = [int(h + hue_rotation) % 180, s, v]
 
     return cv2.cvtColor(hsv_image, cv2.COLOR_HSV2BGR)
-
-#%%  
-def mser_extract_regions(cv_image, lower_color_bound, upper_color_bound) -> [[Region, int]]:
+ 
+def mser_extract_regions(cv_image, lower_color_bound, upper_color_bound):
 
     image = cv_image.copy()
     lower_bound = np.array(lower_color_bound)
@@ -39,7 +37,7 @@ def mser_extract_regions(cv_image, lower_color_bound, upper_color_bound) -> [[Re
 
     masked_image = image & mask_rgb
 
-    mser = cv2.MSER_create(_min_area=250, _max_area=50000, _max_evolution=50000)
+    mser = cv2.MSER_create()
     regions , _ = mser.detectRegions(masked_image)
 
     detected_regions = []
@@ -51,8 +49,7 @@ def mser_extract_regions(cv_image, lower_color_bound, upper_color_bound) -> [[Re
 
     return detected_regions
 
-#%%
-def combine_regions(image, regions) -> [Region]:
+def combine_regions(image, regions):
 
     final_regions = []
 
@@ -83,8 +80,7 @@ def combine_regions(image, regions) -> [Region]:
 
     return final_regions
 
-#%%
-def crop_regions_from_image(original_image, regions_to_crop:[Region]) -> []:
+def crop_regions_from_image(original_image, regions_to_crop):
 
     image = original_image.copy()
     holds = []
@@ -93,17 +89,18 @@ def crop_regions_from_image(original_image, regions_to_crop:[Region]) -> []:
         p = r[0]
         dimension = max(p.x_max - p.x_min, p.y_max - p.y_min)
 
-        hold = original_image[p.y_min:p.y_min + dimension, p.x_min:p.x_min + dimension]
-        holds.append(hold)
+        # hold = original_image[p.y_min:p.y_min + dimension, p.x_min:p.x_min + dimension]
+        # hold = image[p.y_min : p.y_min + dimension, p.x_min : p.x_min + dimension]
+        print(dimension)
+        cv2.rectangle(image, (p.x_min,p.y_min), (p.x_min + dimension, p.y_min + dimension), (0,0,255), 2)
+        holds.append(image)
 
     return holds            
 
 
-#%%
 def main(args):
 
     source_path = args[1]
-    dest_path = args[2]
 
     lower_blue_color_bounds = [130, 50, 10]
     upper_blue_color_bounds = [255, 180, 100]
@@ -123,6 +120,7 @@ def main(args):
             hsv_modified_images.append((hsv_modified_image, file_extension))
 
         # Extract holds on every image
+        cnt = 1
         for image_infos in hsv_modified_images:
             image = image_infos[0]
             detected_regions = mser_extract_regions(image, lower_blue_color_bounds, upper_blue_color_bounds)
@@ -132,7 +130,9 @@ def main(args):
             result_holds = crop_regions_from_image(original_image, final_regions)
 
             for hold in result_holds:
-                cv2.imwrite(os.path.join(dest_path, str(uuid.uuid4()) + image_infos[1]), hold)
+                hold = cv2.resize(hold, (1024,1024))
+                cv2.imwrite(os.path.join(r'C:\Users\Kim\Desktop\Climbing-Hold-Recognition\Sample-Data\data', 'fourth' + str(cnt) + image_infos[1]), hold)
+                cnt += 1
 
 if __name__=='__main__':
     main(sys.argv)

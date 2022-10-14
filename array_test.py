@@ -1,5 +1,6 @@
 #%%
 import os
+from pprint import pprint
 import sys
 import cv2
 import uuid
@@ -8,9 +9,10 @@ import numpy as np
 from Region import Region
 from os import listdir
 from os.path import isfile, join
+from extract_holds import main
 
 
-source_path = r'C:\Users\Guillaume\Documents\Climbing-Hold-Recognition\Sample-Data'
+source_path = r'C:\Users\Kim\Desktop\Climbing-Hold-Recognition\Sample-Data'
 
 transformation = [90, 1, 1]
 
@@ -27,9 +29,8 @@ picture_files = [p for p in listdir(source_path) if isfile(join(source_path, p))
 for image_name in picture_files:
     original_image = cv2.imread(os.path.join(source_path, image_name))
 
-    print(test)
-    print(original_image)
-    break
+main([0, source_path, source_path+'\data'])
+
 
        
 
